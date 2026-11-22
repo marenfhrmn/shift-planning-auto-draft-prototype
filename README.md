@@ -1,10 +1,10 @@
-# Smart Rotations · Auto-Draft (MVP prototype)
+# Shift Planning · Auto-Draft (MVP prototype)
 
 Clickable prototype for a Product Management case study. It shows an
-"Auto-Draft" add-on for B2B Smart Rotations, a shift-planning tool used by
-organizations such as hospitals and retail chains.
+"Auto-Draft" add-on for a shift-planning tool used by
+various industries.
 
-**Live prototype:** <paste your full GitHub Pages URL here>
+**Live prototype:** <(https://marenfhrmn.github.io/smart-rotations-auto-draft-prototype/) >
 
 ## The idea
 Schedulers spend many manual hours building the monthly schedule across roles,
