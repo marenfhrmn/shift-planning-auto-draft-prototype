@@ -4,7 +4,7 @@ Clickable prototype for a Product Management case study. It shows an
 "Auto-Draft" add-on for a shift-planning tool used by
 various industries.
 
-**Live prototype:** <(https://marenfhrmn.github.io/smart-rotations-auto-draft-prototype/) >
+**Live prototype:** https://marenfhrmn.github.io/smart-rotations-auto-draft-prototype/) 
 
 ## The idea
 Schedulers spend many manual hours building the monthly schedule across roles,
