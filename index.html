@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Rotations – Auto-Draft prototype</title>
+<style>
+:root{--ink:#1b2430;--mut:#5b6675;--bg:#f2f5f8;--card:#fff;--line:#d8dee6;--acc:#2543c4;--accbg:#e8edff;--gap:#a61b12;--gapbg:#fdeceb;--x:#7a4a00;--xbg:#fff3d6;--w:#6b2a86;--wbg:#f4e8fa;--ok:#13683a;--okbg:#e5f5ec}
+@media(prefers-color-scheme:dark){:root{--ink:#e8edf3;--mut:#a3adba;--bg:#12171d;--card:#1b222b;--line:#323c49;--acc:#8fa5ff;--accbg:#232e57;--gap:#ff9c93;--gapbg:#3a1a18;--x:#f0c36a;--xbg:#3a2e10;--w:#dca8f2;--wbg:#33203e;--ok:#7fdca5;--okbg:#14301f}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:var(--card);border-bottom:1px solid var(--line);padding:12px 20px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+header h1{font-size:17px;margin:0}.tag{font-size:12px;background:var(--accbg);color:var(--acc);padding:2px 8px;border-radius:4px}
+ol.steps{display:flex;gap:6px;list-style:none;margin:0 0 0 auto;padding:0;font-size:13px;color:var(--mut)}ol.steps li{padding:2px 10px;border-radius:12px}ol.steps li.on{background:var(--acc);color:#fff;font-weight:600}
+main{max-width:1180px;margin:0 auto;padding:20px}h2{font-size:20px;margin:0 0 4px}.sub{color:var(--mut);margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px;margin-bottom:16px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:760px){.cols{grid-template-columns:1fr}}
+button{font:inherit;cursor:pointer}.btn{background:var(--acc);color:#fff;border:0;border-radius:5px;padding:9px 16px;font-weight:600}.btn.sec{background:transparent;color:var(--acc);border:1px solid var(--acc)}.btn.bad{background:var(--gap)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+label{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}input,select{font:inherit;width:84px;padding:4px;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:4px}
+ul.chk{list-style:none;padding:0;margin:0}ul.chk li{padding:3px 0}.okc{color:var(--ok);font-weight:600}
+.spin{width:36px;height:36px;border:4px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:s 1s linear infinite;margin:30px auto 12px}@keyframes s{to{transform:rotate(360deg)}}@media(prefers-reduced-motion:reduce){.spin{animation:none}}
+.sum{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.pill{padding:4px 10px;border-radius:14px;font-weight:600;font-size:13px}.p-ok{background:var(--okbg);color:var(--ok)}.p-gap{background:var(--gapbg);color:var(--gap)}.p-x{background:var(--xbg);color:var(--x)}.p-w{background:var(--wbg);color:var(--w)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}@media(max-width:980px){.layout{grid-template-columns:1fr}}
+.wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:13px}th,td{border:1px solid var(--line);padding:3px}th{background:var(--bg);font-weight:600;text-align:left;padding:5px}th.sl{min-width:150px;position:sticky;left:0}tr.loc th{background:var(--accbg);color:var(--acc)}
+.c{width:100%;min-width:86px;border:1px solid transparent;border-radius:4px;padding:5px 4px;background:var(--card);color:var(--ink);text-align:left}.c.gap{background:var(--gapbg);color:var(--gap);font-weight:700;border-color:var(--gap)}.c.x{background:var(--xbg);color:var(--x)}.c.w{background:var(--wbg);color:var(--w)}.c.sel{outline:3px solid var(--acc)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.tabs button{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:5px;padding:4px 10px}.tabs button[aria-pressed=true]{background:var(--acc);color:#fff}
+.legend{font-size:12px;color:var(--mut);margin-top:8px}.cand{border:1px solid var(--line);border-radius:5px;padding:8px;margin:8px 0}.cand p{margin:2px 0;font-size:13px}.iss{color:var(--w)}.good{color:var(--ok)}
+.warn{background:var(--gapbg);border:1px solid var(--gap);color:var(--ink);padding:10px;border-radius:5px;margin:8px 0}.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.mut{color:var(--mut);font-size:13px}.big{font-size:22px;font-weight:700}
+</style></head><body>
+<header><h1>Smart Rotations · Auto-Draft</h1><span class="tag">Prototype · sample data, not real customers</span>
+<ol class="steps" id="steps"></ol></header>
+<main id="app"></main><div id="live" class="mut" role="status" aria-live="polite" style="position:absolute;left:-9999px"></div>
+<script>
+const LOC=["North","Central","South"],SH=["Early","Late"],ROLE=["Supervisor","Team Member"],TIME={Early:"06:00–14:00",Late:"14:00–22:00"};
+const NAMES=["Ana K.","Ben O.","Cara L.","Dev P.","Eli S.","Fay R.","Gus T.","Hana M.","Ivo B.","Jun W.","Kim A.","Lena H.","Milo D.","Nora C.","Omar Z.","Pia E.","Quinn F.","Rosa G.","Sam V.","Tara N.","Uri J."];
+const emps=[];let ni=0;LOC.forEach((l,i)=>{for(let n=1;n<=3;n++)emps.push({id:"SL"[0]+i+"S"+n,name:NAMES[ni++],loc:l,role:"Supervisor"});for(let n=1;n<=4;n++)emps.push({id:"T"+i+"T"+n,name:NAMES[ni++],loc:l,role:"Team Member"})});
+emps.forEach((e,i)=>{e.id="E"+i});const byRole=(r)=>emps.filter(e=>e.role===r);
+const sup=(loc,n)=>emps.filter(e=>e.loc===loc&&e.role==="Supervisor")[n-1].id;
+const rng=(a,b)=>{const r=[];for(let i=a;i<=b;i++)r.push(i);return r};
+const ABS={};ABS[sup("Central",1)]={d:rng(7,11),why:"Leave"};ABS[sup("Central",2)]={d:rng(9,13),why:"Leave"};
+[["North",2],["North",3],["South",2],["South",3]].forEach(([l,n])=>ABS[sup(l,n)]={d:[9,10],why:"Training"});
+const N=31,wk=i=>Math.floor((i+1)/7),dt=i=>new Date(2026,11,1+i);
+const dl=i=>dt(i).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"});
+let rules={maxWeek:5,rest:11,maxRun:5},view="setup",S={},A={},week=1,sel=null,pend=null,onlyIssues=false,confirmPub=false,msg="";
+const key=(d,sh,l,r)=>[d,sh,l,r].join("|");
+const absent=(id,d)=>ABS[id]&&ABS[id].d.includes(d);
+function issues(e,d,sh,r){const out=[];if(e.role!==r)out.push("Not a "+r+" (role mismatch)");
+const a=A[e.id]||{};let wc=0;for(let i=0;i<N;i++)if(a[i]&&wk(i)===wk(d))wc++;if(wc>=rules.maxWeek)out.push("Would exceed "+rules.maxWeek+" shifts per week");
+let run=1,i=d-1;while(a[i]){run++;i--}i=d+1;while(a[i]){run++;i++}if(run>rules.maxRun)out.push("Would exceed "+rules.maxRun+" days in a row");
+if(rules.rest>8&&((a[d-1]&&a[d-1].sh==="Late"&&sh==="Early")||(a[d+1]&&a[d+1].sh==="Early"&&sh==="Late")))out.push("Less than "+rules.rest+" h rest between shifts");return out}
+function put(sl,e,ovr){sl.emp=e.id;sl.cross=e.loc!==sl.loc;sl.ovr=ovr;(A[e.id]=A[e.id]||{})[sl.d]={sh:sl.sh,loc:sl.loc}}
+function clear(sl){if(sl.emp){delete A[sl.emp][sl.d];sl.emp=null;sl.cross=false;sl.ovr=false}}
+function gen(){S={};A={};const total=()=>0;
+for(let d=0;d<N;d++)for(const sh of SH)for(const l of LOC)for(const r of ROLE){const sl={d,sh,loc:l,role:r,emp:null,cross:false,ovr:false};S[key(d,sh,l,r)]=sl;
+const pool=byRole(r).filter(e=>!absent(e.id,d)&&!(A[e.id]&&A[e.id][d])&&issues(e,d,sh,r).length===0);
+const load=e=>Object.keys(A[e.id]||{}).length;const pick=(p)=>p.sort((a,b)=>load(a)-load(b))[0];
+const own=pool.filter(e=>e.loc===l);const c=own.length?pick(own):(pool.length?pick(pool):null);if(c)put(sl,c,false)}}
+const slots=()=>Object.values(S);
+function cands(sl){return emps.filter(e=>!absent(e.id,sl.d)&&!(A[e.id]&&A[e.id][sl.d])).map(e=>({e,iss:issues(e,sl.d,sl.sh,sl.role)}))
+.sort((a,b)=>(a.iss.length-b.iss.length)||((a.e.loc!==sl.loc)-(b.e.loc!==sl.loc))).slice(0,6)}
+function say(t){document.getElementById("live").textContent=t;msg=t}
+function steps(){const n=["Set up","Review draft","Publish"],i=view==="setup"||view==="loading"?0:view==="review"?1:2;document.getElementById("steps").innerHTML=n.map((t,k)=>`<li class="${k===i?"on":""}">${t}</li>`).join("")}
+function setup(){return `<h2>December 2026 · not planned yet</h2><p class="sub">Generate a first draft from availability, absences, roles and coverage needs. You review only what needs a decision.</p>
+<div class="cols"><div class="card"><strong>Data used</strong><ul class="chk"><li><span class="okc">✓</span> ${emps.length} employees, 3 locations (default location per employee)</li><li><span class="okc">✓</span> Availability and absences loaded (${Object.keys(ABS).length} employees with absences in this month)</li><li><span class="okc">✓</span> Coverage needs: 1 Supervisor and 1 Team Member per location and shift</li><li><span class="okc">✓</span> Shifts: Early ${TIME.Early}, Late ${TIME.Late}</li></ul>
+<p class="mut">Employees are planned at their default location first. If nobody is eligible there, the draft looks at nearby locations.</p></div>
+<div class="card"><strong>General rules (adjustable values)</strong>
+<label>Max shifts per week<input type="number" id="r1" min="3" max="7" value="${rules.maxWeek}"></label>
+<label>Min rest between shifts<select id="r2"><option value="11" ${rules.rest===11?"selected":""}>11 h</option><option value="8" ${rules.rest===8?"selected":""}>8 h</option></select></label>
+<label>Max days in a row<input type="number" id="r3" min="3" max="7" value="${rules.maxRun}"></label>
+<p class="mut">Values are set by the customer. The tool does not guarantee legal compliance.</p></div></div>
+<button class="btn" id="go">Generate draft</button>`}
+function loading(){return `<div class="card" style="text-align:center"><div class="spin"></div><strong>Building the December draft…</strong><p class="mut">Checking availability, roles, coverage and rules</p></div>`}
+function weeks(){const w=[];for(let i=0;i<N;i++){if(!w.includes(wk(i)))w.push(wk(i))}return w}
+function grid(){const ds=rng(0,N-1).filter(d=>wk(d)===week);let h=`<div class="wrap"><table><thead><tr><th class="sl">Location · shift · role</th>${ds.map(d=>`<th scope="col">${dl(d)}</th>`).join("")}</tr></thead><tbody>`;
+for(const l of LOC){let rows="";for(const sh of SH)for(const r of ROLE){const cs=ds.map(d=>S[key(d,sh,l,r)]);if(onlyIssues&&!cs.some(c=>!c.emp||c.ovr))continue;
+rows+=`<tr><th scope="row" class="sl">${sh} · ${r}</th>${cs.map(c=>{const k=key(c.d,c.sh,c.loc,c.role),s=sel===k?" sel":"";
+if(!c.emp)return `<td><button class="c gap${s}" data-k="${k}" aria-label="Gap, ${dl(c.d)}, ${c.loc} ${c.sh} ${c.role}">Gap – open</button></td>`;
+const e=emps.find(x=>x.id===c.emp),cl=c.ovr?" w":c.cross?" x":"";
+return `<td><button class="c${cl}${s}" data-k="${k}" aria-label="${e.name}${c.cross?", from "+e.loc:""}${c.ovr?", rule override":""}, ${dl(c.d)}, ${c.loc} ${c.sh}">${e.name}${c.cross?" ↔":""}${c.ovr?" !":""}</button></td>`}).join("")}</tr>`}
+if(rows)h+=`<tr class="loc"><th colspan="${ds.length+1}">${l}</th></tr>`+rows}
+return h+"</tbody></table></div>"}
+function detail(){if(confirmPub){const g=slots().filter(s=>!s.emp).length,o=slots().filter(s=>s.ovr).length;
+return `<div class="card"><strong>Publish December 2026?</strong>${g?`<div class="warn"><strong>${g} shifts are still open.</strong> Employees will see them as unfilled. Go back to fill them, or publish anyway.</div>`:`<p class="good">All shifts are filled.</p>`}${o?`<p class="iss">${o} assignments override a rule.</p>`:""}
+<div class="row"><button class="btn${g?" bad":""}" id="pubok">${g?"Publish anyway":"Publish"}</button><button class="btn sec" id="pubno">Back to review</button></div></div>`}
+if(!sel)return `<div class="card"><strong>Shift details</strong><p class="mut">Select any cell to see why it was assigned. Select a red <strong>Gap</strong> to fix it.</p>${msg?`<p class="good">${msg}</p>`:""}</div>`;
+const sl=S[sel],e=sl.emp&&emps.find(x=>x.id===sl.emp),head=`<strong>${dl(sl.d)} · ${sl.loc} · ${sl.sh} (${TIME[sl.sh]}) · ${sl.role}</strong>`;
+if(e){const why=sl.ovr?"Assigned manually with a rule override.":sl.cross?`Default location ${e.loc} had no eligible ${sl.role.toLowerCase()} on this shift, so this person from a nearby location was used.`:`Available, qualified as ${sl.role.toLowerCase()}, within all rules, default location ${e.loc}.`;
+return `<div class="card">${head}<p><strong>${e.name}</strong> (${e.role}, ${e.loc})</p><p class="mut">Why this assignment: ${why}</p><div class="row"><button class="btn sec" id="unassign">Remove from this shift</button></div></div>`}
+const cs=cands(sl);const nOk=cs.filter(c=>!c.iss.length).length;
+return `<div class="card">${head}<div class="warn">No one could be assigned automatically: every ${sl.role.toLowerCase()} is on leave, in training, already scheduled, or would break a rule.</div><strong>Possible people</strong>${nOk?"":`<p class="mut">No one is free without a rule issue. You can still assign someone with an override, or leave the shift open.</p>`}
+${cs.map((c,i)=>`<div class="cand"><p><strong>${c.e.name}</strong> · ${c.e.role} · ${c.e.loc}${c.e.loc!==sl.loc?" (other location)":""}</p>${c.iss.length?c.iss.map(x=>`<p class="iss">! ${x}</p>`).join(""):`<p class="good">✓ No rule issues</p>`}
+${pend===i?`<div class="warn">Assign anyway? This overrides: ${c.iss.join("; ")}.</div><div class="row"><button class="btn bad" data-ok="${i}">Assign anyway</button><button class="btn sec" id="canc">Cancel</button></div>`:`<button class="btn sec" data-as="${i}">Assign</button>`}</div>`).join("")}</div>`}
+function review(){const a=slots(),g=a.filter(s=>!s.emp).length,x=a.filter(s=>s.cross).length,o=a.filter(s=>s.ovr).length;
+return `<h2>Review the December draft</h2><p class="sub">Draft built in a few seconds. Check the flagged shifts, then publish.</p>
+<div class="card sum"><span class="pill p-ok">${a.length-g} of ${a.length} shifts filled</span><span class="pill p-gap">${g} gaps need you</span><span class="pill p-x">${x} from nearby locations ↔</span>${o?`<span class="pill p-w">${o} rule overrides !</span>`:""}
+<span style="margin-left:auto" class="row"><button class="btn sec" id="back">Edit rules and regenerate</button><button class="btn" id="pub">Publish</button></span></div>
+<div class="layout"><div class="card"><div class="tabs" role="group" aria-label="Week">${weeks().map(w=>{const f=rng(0,N-1).find(i=>wk(i)===w);return `<button data-w="${w}" aria-pressed="${w===week}">From ${dt(f).toLocaleDateString("en-GB",{day:"numeric",month:"short"})}</button>`}).join("")}<button id="oi" aria-pressed="${onlyIssues}">Show issues only</button></div>
+${grid()}<p class="legend">Red “Gap” = open shift · ↔ = person from a nearby location · ! = rule override. Status is always shown as text, not only color.</p></div><div>${detail()}</div></div>`}
+function done(){return `<div class="card" style="text-align:center"><p class="big good">✓ December 2026 published</p><p>The schedule is now visible to ${emps.length} employees.</p><p class="mut">Prototype end. Notifications and shift swaps are not part of this MVP.</p><button class="btn sec" id="again">Start over</button></div>`}
+function draw(){steps();const m=document.getElementById("app");m.innerHTML=view==="setup"?setup():view==="loading"?loading():view==="review"?review():done();bind()}
+const $=id=>document.getElementById(id);
+function bind(){const on=(id,f)=>{const e=$(id);if(e)e.onclick=f};
+on("go",()=>{rules.maxWeek=+$("r1").value;rules.rest=+$("r2").value;rules.maxRun=+$("r3").value;view="loading";draw();setTimeout(()=>{gen();sel=null;week=1;msg="";view="review";draw()},1600)});
+on("back",()=>{view="setup";draw()});on("pub",()=>{confirmPub=true;draw()});on("pubno",()=>{confirmPub=false;draw()});on("pubok",()=>{confirmPub=false;view="done";draw()});on("again",()=>{view="setup";draw()});
+on("oi",()=>{onlyIssues=!onlyIssues;draw()});on("canc",()=>{pend=null;draw()});
+on("unassign",()=>{clear(S[sel]);say("Shift is open again");draw()});
+document.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{sel=b.dataset.k;pend=null;confirmPub=false;draw()});
+document.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>{week=+b.dataset.w;sel=null;draw()});
+document.querySelectorAll("[data-as]").forEach(b=>b.onclick=()=>{const i=+b.dataset.as,sl=S[sel],c=cands(sl)[i];if(c.iss.length){pend=i;draw();return}put(sl,c.e,false);pend=null;say("Assigned "+c.e.name+". One gap fewer.");draw()});
+document.querySelectorAll("[data-ok]").forEach(b=>b.onclick=()=>{const i=+b.dataset.ok,sl=S[sel],c=cands(sl)[i];put(sl,c.e,true);pend=null;say("Assigned "+c.e.name+" with a rule override.");draw()})}
+draw();
+</script></body></html>
